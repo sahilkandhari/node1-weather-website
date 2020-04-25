@@ -1,0 +1,93 @@
+const geocode = require('./utils/geocde')
+const forecast = require('./utils/forecast')
+const path = require('path')
+const express = require('express')
+const hbs = require('hbs')
+
+const app = express()
+
+const publicDirectoryPath = path.join(__dirname, '../public')
+const viewsPath = path.join(__dirname,'../templates/views')
+const partialsPath = path.join(__dirname,'../templates/partials')
+
+app.set('view engine','hbs')
+app.set('views', viewsPath)
+hbs.registerPartials(partialsPath)
+
+app.get('',(req,res) => {
+    res.render('index',{
+        title: 'Weather',
+        name: 'Sahil K'
+    })
+})
+
+app.get('/about',(req,res) => {
+    res.render('about',{
+        title:'About page',
+        name: 'Sahil K'
+    })
+})
+
+app.get('/help',(req,res) => {
+    res.render('help',{
+        title:'Help page',
+        name:'Sahil K'
+    })
+})
+
+app.use(express.static(publicDirectoryPath))
+
+app.get('/weather', (req, res) => {
+    if(!req.query.address){
+        return res.send({
+            error :'Provide address'
+        })
+    }
+
+    const address1 = req.query.address
+    
+    geocode(address1,(error,data={}) => {
+ 
+        if(error) {
+          return res.send(error)
+        }
+      
+        forecast(data.latitude,data.longitude,(error,forecastData) => {
+      
+          if(error) {
+            return res.send(error)
+          }
+          
+       //   console.log(data.location)
+       // console.log(forecastData)
+
+          res.send({
+              Place: data.location,
+              Weather: forecastData
+          })
+        
+        })
+      
+      })
+
+})
+
+app.get('/help/*', (req,res) => {
+    res.render('404', {
+        title : '404',
+        name :'Sahil K',
+        errorMessage : ' Help page not found'
+    })
+})
+
+app.get('*', (req,res) => {
+    res.render('404', {
+        title : '404',
+        name :'Sahil K',
+        errorMessage : 'page not found'
+    })
+})
+
+app.listen(3000, () => {
+    console.log('Server is up on port 3000.')
+})
